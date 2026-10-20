@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Wings Travel - Bike Rental Agreement & Risk Form</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf.js for client-side PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-full flex flex-col antialiased selection:bg-amber-500 selection:text-white" x-data="documentGenerator()">
+
+    <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/50 sticky top-0 z-50 px-4 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-600 text-white p-2 rounded-xl shadow-lg shadow-amber-500/30 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-motorcycle text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm sm:text-lg tracking-tight text-white flex items-center gap-2">
+                        Golden Wings <span class="text-[10px] sm:text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium">Bike Rental</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-400 hidden sm:block">Full A4 Single-Page Form & Firebase Cloud Sync</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-end">
+            <button @click="loadSampleData()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium rounded-xl transition-all border border-slate-600 flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Sample Data
+            </button>
+
+            <button @click="saveToCloud()" :disabled="isSaving" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded-xl transition-all shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 disabled:opacity-50">
+                <i class="fa-solid" :class="isSaving ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-up'"></i>
+                <span x-text="isSaving ? 'Saving...' : 'Save to Cloud'"></span>
+            </button>
+
+            <button @click="shareViaWhatsApp()" :disabled="isGenerating" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/30 flex items-center gap-2 disabled:opacity-50">
+                <i class="fa-solid" :class="isGenerating ? 'fa-spinner fa-spin' : 'fa-brands fa-whatsapp text-sm'"></i>
+                <span x-text="isGenerating ? 'Preparing...' : 'Share via WhatsApp'"></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        
+        <!-- Left Pane: Unified Rental Form Builder -->
+        <section class="w-full lg:w-1/2 flex flex-col bg-slate-800 border-r border-slate-700/60 overflow-y-auto">
+            
+            <div class="border-b border-slate-700 bg-slate-800/90 sticky top-0 z-20 px-4 sm:px-6 py-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-file-contract text-amber-400"></i>
+                    <h3 class="text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider">Rental Form Inputs</h3>
+                </div>
+                <span class="text-[10px] sm:text-xs text-slate-400 bg-slate-900 px-2.5 py-1 rounded-full border border-slate-700">A4 Layout</span>
+            </div>
+
+            <!-- Form Fields Container -->
+            <div class="p-4 sm:p-6 space-y-6 flex-1">
+                
+                <!-- 1. Renter Details & Driving Licence Upload Section -->
+                <div class="space-y-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-700/60">
+                    <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+                        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-id-card"></i> Renter Details & ID Proofs
+                        </h4>
+                        <span class="text-[11px] text-slate-400">Personal & Identity</span>
+                    </div>
+
+                    <!-- Driving Licence Image Upload Field (Prominent) -->
+                    <div class="flex flex-col sm:flex-row items-center gap-4 bg-slate-900/80 p-4 rounded-xl border border-slate-700/80">
+                        <div class="w-36 h-24 rounded-lg bg-slate-800 border-2 border-slate-700 flex items-center justify-center overflow-hidden shrink-0 relative shadow-inner">
+                            <template x-if="form.drivingLicenceImage">
+                                <img :src="form.drivingLicenceImage" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!form.drivingLicenceImage">
+                                <div class="text-center p-2">
+                                    <i class="fa-solid fa-id-card text-slate-500 text-2xl mb-1"></i>
+                                    <p class="text-[9px] text-slate-400">No DL Uploaded</p>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="flex-1 space-y-1.5 w-full text-center sm:text-left">
+                            <label class="block text-xs font-medium text-slate-300">Driving Licence Image (Large Preview on PDF)</label>
+                            <div class="flex items-center justify-center sm:justify-start gap-2">
+                                <label class="cursor-pointer bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium px-3.5 py-2 rounded-xl transition-all flex items-center gap-2 shadow-md">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Upload DL Photo
+                                    <input type="file" accept="image/*" @change="handleLicenceUpload($event)" class="hidden">
+                                </label>
+                                <button x-show="form.drivingLicenceImage" @click="form.drivingLicenceImage = ''" class="text-slate-400 hover:text-red-400 text-xs px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors border border-slate-700">
+                                    Remove
+                                </button>
+                            </div>
+                            <p class="text-[11px] text-slate-500">Uploaded photo appears in large format on the official PDF.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Serial No. (S.No.)</label>
+                            <input type="text" x-model="form.serialNo" placeholder="e.g. GW-2026-041" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Date & Time</label>
+                            <input type="text" x-model="form.dateTime" placeholder="e.g. 24/10/2026, 10:30 AM" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Full Name</label>
+                            <input type="text" x-model="form.name" placeholder="e.g. Rahul Sharma" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Father's Name</label>
+                            <input type="text" x-model="form.fatherName" placeholder="e.g. Mr. Suresh Sharma" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Residential Address</label>
+                        <textarea rows="2" x-model="form.address" placeholder="e.g. Flat 402, Ganga Heights, Rishikesh, Uttarakhand" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500 resize-none"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Mobile No.</label>
+                            <input type="text" x-model="form.mobileNo" placeholder="+91 98765 43210" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Emergency Telephone No.</label>
+                            <input type="text" x-model="form.emergencyNo" placeholder="+91 91234 56789" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Pan Card No.</label>
+                            <input type="text" x-model="form.panCard" placeholder="ABCDE1234F" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500 uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Aadhar Card No.</label>
+                            <input type="text" x-model="form.aadharCard" placeholder="4123 5678 9012" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">D.L. Licence No.</label>
+                            <input type="text" x-model="form.dlNo" placeholder="UK07 20210001234" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500 uppercase">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Vehicle & Financial Terms Section -->
+                <div class="space-y-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-700/60">
+                    <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+                        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-motorcycle"></i> Vehicle & Financial Terms
+                        </h4>
+                        <span class="text-[11px] text-slate-400">Bike & Pricing</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Vehicle No. (Bike Number)</label>
+                            <input type="text" x-model="form.vehicleNo" placeholder="e.g. UK-14-C-5678" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500 uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Rent Per Day in Indian Rs.</label>
+                            <input type="text" x-model="form.rentPerDay" placeholder="e.g. 600/-" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Date & Time of Taking The Vehicle</label>
+                            <input type="text" x-model="form.takingDateTime" placeholder="24/10/2026, 11:00 AM" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Date & Time of Return The Vehicle</label>
+                            <input type="text" x-model="form.returnDateTime" placeholder="27/10/2026, 06:00 PM" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Refundable Security of Per Vehicle Rs.</label>
+                        <input type="text" x-model="form.securityDeposit" placeholder="e.g. 2000/-" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <!-- 3. Travel Details Section -->
+                <div class="space-y-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-700/60">
+                    <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+                        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-map-location-dot"></i> Travel Itinerary & Stay Details
+                        </h4>
+                        <span class="text-[11px] text-slate-400">Destination & Hotel</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Where To Go (Destination)</label>
+                        <input type="text" x-model="form.whereToGo" placeholder="e.g. Chopta, Tungnath, Kedarnath" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Passport No. (If applicable)</label>
+                            <input type="text" x-model="form.passportNo" placeholder="Optional" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Visa No. (If applicable)</label>
+                            <input type="text" x-model="form.visaNo" placeholder="Optional" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Hotel Name</label>
+                            <input type="text" x-model="form.hotelName" placeholder="e.g. Hotel Ganga View, Laxman Jhula" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Rooms No.</label>
+                            <input type="text" x-model="form.roomNo" placeholder="e.g. Room 204" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Right Pane: Live PDF Preview (Fully Responsive Scroll Container) -->
+        <section class="w-full lg:w-1/2 bg-slate-950 flex flex-col items-center justify-start p-2 sm:p-6 overflow-y-auto relative">
+            
+            <div class="w-full max-w-[210mm] flex items-center justify-between mb-3 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-xl text-xs text-slate-400 backdrop-blur shrink-0">
+                <span class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    Live A4 Agreement Preview
+                </span>
+                <span class="text-slate-500 font-mono hidden sm:inline">210 x 297 mm</span>
+            </div>
+
+            <!-- PDF Page Wrapper for Capture (Full A4 layout) with auto-scaling transform on small viewports -->
+            <div class="w-full flex justify-center pb-12 overflow-x-auto px-2 sm:px-0">
+                <div id="pdf-content" class="w-[210mm] min-w-[210mm] min-h-[297mm] bg-white text-slate-900 shadow-2xl rounded-sm p-[10mm] text-[10.5px] font-sans leading-snug relative flex flex-col justify-between shrink-0 origin-top scale-[0.45] xs:scale-[0.55] sm:scale-[0.75] md:scale-[0.85] lg:scale-[0.88] xl:scale-[0.95] transition-transform mx-auto">
+                    
+                    <!-- Top Section -->
+                    <div class="space-y-3">
+                        <!-- Header -->
+                        <div class="flex items-start justify-between border-b-2 border-slate-900 pb-2.5">
+                            <div class="space-y-0.5">
+                                <div class="text-[9px] font-bold text-slate-500 tracking-wider">BIKE ON RENT</div>
+                                <h2 class="text-xl font-extrabold tracking-wider uppercase text-slate-900 font-serif">GOLDEN WINGS TRAVEL</h2>
+                                <p class="text-[11px] font-medium text-slate-700">Near-Kirmola, Laxman Jhula-249302</p>
+                                <p class="text-[11px] font-bold text-slate-800">Mob.: 7900454651, 8171057712</p>
+                            </div>
+                            <div class="text-right space-y-1">
+                                <div class="inline-block bg-slate-900 text-white font-bold px-2.5 py-1 rounded text-[10px] uppercase tracking-wider mb-1">
+                                    Rent Agreement & Risk Form
+                                </div>
+                                <div class="text-[11px] font-medium text-slate-700">
+                                    <div><strong>S.No.:</strong> <span x-text="form.serialNo"></span></div>
+                                    <div><strong>Date & Time:</strong> <span x-text="form.dateTime"></span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Renter Form Details Grid -->
+                        <div class="space-y-2">
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-32 shrink-0">Name:</span>
+                                <span class="flex-1 font-bold text-slate-900 text-xs" x-text="form.name"></span>
+                            </div>
+                            
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-32 shrink-0">Father's Name:</span>
+                                <span class="flex-1 text-slate-900 font-medium" x-text="form.fatherName"></span>
+                            </div>
+
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-32 shrink-0">Address:</span>
+                                <span class="flex-1 text-slate-900" x-text="form.address"></span>
+                                <span class="font-bold text-slate-800 shrink-0 ml-2">Emergency Tel:</span>
+                                <span class="w-32 text-slate-900 font-medium" x-text="form.emergencyNo"></span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 border-b border-dotted border-slate-400 pb-1">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="font-bold text-slate-800 w-32 shrink-0">Mobile No.:</span>
+                                    <span class="flex-1 font-bold text-slate-900" x-text="form.mobileNo"></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="font-bold text-slate-800 w-32 shrink-0">Vehicle No.:</span>
+                                    <span class="flex-1 font-bold text-amber-700 uppercase text-xs" x-text="form.vehicleNo"></span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <div class="flex items-baseline gap-1">
+                                    <span class="font-bold text-slate-800 shrink-0">Pan Card No.:</span>
+                                    <span class="font-mono text-slate-900 uppercase font-medium" x-text="form.panCard"></span>
+                                </div>
+                                <div class="flex items-baseline gap-1 col-span-2">
+                                    <span class="font-bold text-slate-800 shrink-0">Aadhar Card No.:</span>
+                                    <span class="font-mono text-slate-900 font-medium" x-text="form.aadharCard"></span>
+                                </div>
+                            </div>
+
+                            <!-- Driving Licence Section with Extra Large Image Preview -->
+                            <div class="grid grid-cols-2 gap-4 border-b border-dotted border-slate-400 pb-2 items-center">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="font-bold text-slate-800 w-32 shrink-0">D.L. Licence No.:</span>
+                                    <span class="font-mono font-bold text-slate-900 uppercase text-xs" x-text="form.dlNo"></span>
+                                </div>
+                                <div x-show="form.drivingLicenceImage" class="flex flex-col items-end justify-center py-1">
+                                    <span class="text-[9px] font-bold text-slate-600 mb-1">Driving Licence Scan (Extra Large):</span>
+                                    <img :src="form.drivingLicenceImage" class="w-[420px] h-[230px] object-cover border-2 border-slate-900 rounded-md shadow-lg">
+                                </div>
+                            </div>
+
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-32 shrink-0">Where To Go:</span>
+                                <span class="flex-1 font-bold text-slate-900" x-text="form.whereToGo"></span>
+                                <span class="font-bold text-slate-800 shrink-0">Visa No.:</span>
+                                <span class="w-24 text-slate-900 font-medium" x-text="form.visaNo"></span>
+                            </div>
+
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-32 shrink-0">Passport No.:</span>
+                                <span class="flex-1 text-slate-900 font-medium" x-text="form.passportNo"></span>
+                                <span class="font-bold text-slate-800 shrink-0">Rooms No.:</span>
+                                <span class="w-24 text-slate-900 font-medium" x-text="form.roomNo"></span>
+                            </div>
+
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-44 shrink-0">10. Hotel Name:</span>
+                                <span class="flex-1 text-slate-900 font-medium" x-text="form.hotelName"></span>
+                            </div>
+
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-44 shrink-0">11. Date & Time of Taking The Vehicle:</span>
+                                <span class="flex-1 text-slate-900 font-medium" x-text="form.takingDateTime"></span>
+                            </div>
+
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-44 shrink-0">12. Date & Time of Return The Vehicle:</span>
+                                <span class="flex-1 text-slate-900 font-medium" x-text="form.returnDateTime"></span>
+                            </div>
+
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-44 shrink-0">13. Rent Per Day in Indian Rs.:</span>
+                                <span class="flex-1 font-bold text-slate-900 text-xs" x-text="form.rentPerDay"></span>
+                            </div>
+
+                            <div class="flex items-baseline gap-2 border-b border-dotted border-slate-400 pb-1">
+                                <span class="font-bold text-slate-800 w-44 shrink-0">14. Refundable Security of Per Vehicle Rs.:</span>
+                                <span class="flex-1 font-bold text-slate-900 text-xs" x-text="form.securityDeposit"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <!-- Note Box -->
+                        <div class="border-2 border-slate-900 bg-slate-100 p-1.5 text-center font-bold text-[9px] uppercase tracking-wider">
+                            NOTE - IN THE CASE OF TRIPLE RIDING ON THE VEHICLE THEY ARE SECURITY MONEY WILL BE SEEZED (EXTRA PENALTY 5000/- RS. EXTRA)
+                        </div>
+
+                        <!-- Terms and Conditions List -->
+                        <div class="space-y-0.5 text-[9px] text-slate-800 leading-tight">
+                            <div class="font-bold text-slate-900 mb-0.5">TERMS AND CONDITIONS:</div>
+                            <div>1. In Signing this documents, I represent that I am fully knowledgeable of danger and hazarde Associated with (Hire/touring) Vehicle that. I understand that such activity (MAY CAUSE SERIOUS INJURY OR DEATH.)</div>
+                            <div>2. Certify that I am duly licensed and competent to operate a motorcycle in a safe manner, and the vehicle is in a safe operating condition. I hereby release and hold harmless.</div>
+                            <div>3. Customer taking the vehicle will be fully responsible for the vehicle.</div>
+                            <div>4. Condition of vehicle dent-paint etc. has to be checked properly before taking the vehicle. any damage done to vehicle will be charge from the customer.</div>
+                            <div>5. In case of there is any mechanical problem (Internal engine) the company will be responsible.</div>
+                            <div>6. Customer not give the bike to any other person who is not to holding driving licence.</div>
+                            <div>7. Wearing helmet/Mask while riding the vehicle is compulsory.</div>
+                            <div>8. For Extra helmet Rs. 100/- per day will be charged Extra.</div>
+                            <div>9. Rent per day will be valid till 8:30 am to 8:30 pm.</div>
+                            <div>10. Bike or Scooty has to return at 8:30 pm. After that it will be continue next day charge.</div>
+                            <div>11. In case of bike or scooty paper missing 2000/- Rs. Charge by the customer.</div>
+                            <div>12. Fuel will not be refundable.</div>
+                        </div>
+
+                        <!-- Final Statement -->
+                        <div class="border-t-2 border-slate-900 pt-1.5 text-center font-bold text-[9.5px] uppercase tracking-tight text-slate-900">
+                            I HAVE READ THE ABOVE TERMS AND CONDITIONS CAREFULLY AND HERE BY SIGN IT AFTER GOING THROUGH IT
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <div x-show="showToast" x-transition class="fixed bottom-6 right-6 bg-slate-800 text-slate-100 border border-slate-700 px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span class="text-sm font-medium" x-text="toastMessage"></span>
+    </div>
+
+    <script>
+        function documentGenerator() {
+            return {
+                isGenerating: false,
+                isSaving: false,
+                showToast: false,
+                toastMessage: '',
+
+                form: {
+                    serialNo: '',
+                    dateTime: '',
+                    name: '',
+                    fatherName: '',
+                    address: '',
+                    mobileNo: '',
+                    emergencyNo: '',
+                    vehicleNo: '',
+                    panCard: '',
+                    aadharCard: '',
+                    dlNo: '',
+                    drivingLicenceImage: '',
+                    whereToGo: '',
+                    passportNo: '',
+                    visaNo: '',
+                    roomNo: '',
+                    hotelName: '',
+                    takingDateTime: '',
+                    returnDateTime: '',
+                    rentPerDay: '',
+                    securityDeposit: ''
+                },
+
+                init() {
+                    // Auto-generate a default serial number on load if empty
+                    if (!this.form.serialNo) {
+                        const randomNum = Math.floor(1000 + Math.random() * 9000);
+                        this.form.serialNo = `GW-2026-${randomNum}`;
+                    }
+                    if (!this.form.dateTime) {
+                        const now = new Date();
+                        this.form.dateTime = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+                },
+
+                loadSampleData() {
+                    this.form = {
+                        serialNo: 'GW-' + Math.floor(1000 + Math.random() * 9000),
+                        dateTime: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                        name: 'Rahul Sharma',
+                        fatherName: 'Mr. Suresh Sharma',
+                        address: 'Flat 402, Ganga Heights, Rishikesh, Uttarakhand',
+                        mobileNo: '7900454651',
+                        emergencyNo: '9876543210',
+                        vehicleNo: 'UK-14-C-4521',
+                        panCard: 'ABCDE1234F',
+                        aadharCard: '4123 5678 9012',
+                        dlNo: 'UK07 20220004512',
+                        drivingLicenceImage: 'https://placehold.co/400x250/333333/ffffff?text=Sample+Driving+Licence',
+                        whereToGo: 'Chopta & Kedarnath',
+                        passportNo: 'N/A',
+                        visaNo: 'N/A',
+                        roomNo: '104',
+                        hotelName: 'Hotel Himalayan View',
+                        takingDateTime: new Date().toLocaleDateString() + ' 11:00 AM',
+                        returnDateTime: new Date(Date.now() + 86400000*3).toLocaleDateString() + ' 06:00 PM',
+                        rentPerDay: '600/-',
+                        securityDeposit: '2000/-'
+                    };
+                    this.triggerToast('Sample data loaded successfully!');
+                },
+
+                handleLicenceUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        if (file.size > 4 * 1024 * 1024) {
+                            this.triggerToast('Image file is too large. Max size is 4MB.');
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.form.drivingLicenceImage = e.target.result;
+                            this.triggerToast('Driving licence image uploaded successfully!');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+
+                triggerToast(msg) {
+                    this.toastMessage = msg;
+                    this.showToast = true;
+                    setTimeout(() => { this.showToast = false; }, 3000);
+                },
+
+                async saveToCloud() {
+                    this.isSaving = true;
+                    try {
+                        const dbUrl = 'https://rent-form-2a862-default-rtdb.firebaseio.com/';
+                        const serialKey = this.form.serialNo ? this.form.serialNo.trim().replace(/[^a-zA-Z0-9_-]/g, '_') : ('GW_' + Date.now());
+                        const response = await fetch(`${dbUrl}/rentals/${serialKey}.json`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                ...this.form,
+                                updatedAt: new Date().toISOString()
+                            })
+                        });
+
+                        if (response.ok) {
+                            this.triggerToast('Rental agreement successfully saved under S.No: ' + serialKey);
+                        } else {
+                            throw new Error('Failed to save to cloud');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        this.triggerToast('Error saving to cloud. Please check network.');
+                    } finally {
+                        this.isSaving = false;
+                    }
+                },
+
+                shareViaWhatsApp() {
+                    this.isGenerating = true;
+                    const element = document.getElementById('pdf-content');
+                    
+                    const opt = {
+                        margin:       [2, 2, 2, 2],
+                        filename:     (this.form.name ? this.form.name.toLowerCase().replace(/\s+/g, '_') : 'rental') + '_agreement.pdf',
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+
+                    html2pdf().from(element).set(opt).save().then(() => {
+                        this.isGenerating = false;
+                        this.triggerToast('PDF downloaded! Opening WhatsApp...');
+                        
+                        // Clean mobile number for WhatsApp link
+                        let cleanMobile = this.form.mobileNo ? this.form.mobileNo.replace(/\D/g, '') : '';
+                        if (cleanMobile && !cleanMobile.startsWith('91') && cleanMobile.length === 10) {
+                            cleanMobile = '91' + cleanMobile; // Default to India country code if 10 digits
+                        }
+                        
+                        const text = encodeURIComponent(`Hello *${this.form.name || 'Customer'}*,\n\nHere is your bike rental agreement and risk form copy from *Golden Wings Travel* (S.No: ${this.form.serialNo || 'N/A'}, Vehicle: ${this.form.vehicleNo || 'N/A'}). Please find your downloaded PDF attached.\n\nThank you for riding with us!`);
+                        
+                        const whatsappUrl = cleanMobile ? `https://wa.me/${cleanMobile}?text=${text}` : `https://wa.me/?text=${text}`;
+                        window.open(whatsappUrl, '_blank');
+                    }).catch(err => {
+                        console.error(err);
+                        this.isGenerating = false;
+                        this.triggerToast('Error generating PDF for WhatsApp. Please try again.');
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
