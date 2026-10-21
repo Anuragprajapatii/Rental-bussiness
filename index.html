@@ -536,17 +536,33 @@
                     this.isGenerating = true;
                     const element = document.getElementById('pdf-content');
                     
+                    // Temporarily remove transform scale for pristine mobile PDF capture
+                    const originalTransform = element.style.transform;
+                    const originalWidth = element.style.width;
+                    element.style.transform = 'none';
+                    element.style.width = '210mm';
+
                     const opt = {
-                        margin:       [2, 2, 2, 2],
+                        margin:       [4, 4, 4, 4],
                         filename:     (this.form.name ? this.form.name.toLowerCase().replace(/\s+/g, '_') : 'rental') + '_agreement.pdf',
                         image:        { type: 'jpeg', quality: 0.98 },
-                        html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                        html2canvas:  { 
+                            scale: 2, 
+                            useCORS: true, 
+                            letterRendering: true,
+                            scrollY: 0,
+                            windowWidth: 794 // Exact standard A4 width in pixels at 96 DPI
+                        },
                         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
 
                     html2pdf().from(element).set(opt).save().then(() => {
+                        // Restore original preview transform after PDF generation
+                        element.style.transform = originalTransform;
+                        element.style.width = originalWidth;
+                        
                         this.isGenerating = false;
-                        this.triggerToast('PDF downloaded! Opening WhatsApp...');
+                        this.triggerToast('PDF generated! Opening WhatsApp...');
                         
                         // Clean mobile number for WhatsApp link
                         let cleanMobile = this.form.mobileNo ? this.form.mobileNo.replace(/\D/g, '') : '';
@@ -559,6 +575,8 @@
                         const whatsappUrl = cleanMobile ? `https://wa.me/${cleanMobile}?text=${text}` : `https://wa.me/?text=${text}`;
                         window.open(whatsappUrl, '_blank');
                     }).catch(err => {
+                        element.style.transform = originalTransform;
+                        element.style.width = originalWidth;
                         console.error(err);
                         this.isGenerating = false;
                         this.triggerToast('Error generating PDF for WhatsApp. Please try again.');
