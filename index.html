@@ -24,6 +24,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 h-full flex flex-col antialiased selection:bg-amber-500 selection:text-white" x-data="documentGenerator()">
 
+    <!-- Header -->
     <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/50 sticky top-0 z-50 px-4 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
             <div class="flex items-center space-x-3">
@@ -58,9 +59,8 @@
 
     <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
-        <!-- Left Pane: Unified Rental Form Builder -->
+        <!-- Left Pane: Form Inputs -->
         <section class="w-full lg:w-1/2 flex flex-col bg-slate-800 border-r border-slate-700/60 overflow-y-auto">
-            
             <div class="border-b border-slate-700 bg-slate-800/90 sticky top-0 z-20 px-4 sm:px-6 py-3.5 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-file-contract text-amber-400"></i>
@@ -81,7 +81,7 @@
                         <span class="text-[11px] text-slate-400">Personal & Identity</span>
                     </div>
 
-                    <!-- Driving Licence Image Upload Field (Prominent) -->
+                    <!-- Driving Licence Image Upload Field -->
                     <div class="flex flex-col sm:flex-row items-center gap-4 bg-slate-900/80 p-4 rounded-xl border border-slate-700/80">
                         <div class="w-36 h-24 rounded-lg bg-slate-800 border-2 border-slate-700 flex items-center justify-center overflow-hidden shrink-0 relative shadow-inner">
                             <template x-if="form.drivingLicenceImage">
@@ -240,7 +240,7 @@
             </div>
         </section>
 
-        <!-- Right Pane: Live PDF Preview (Fully Responsive Scroll Container) -->
+        <!-- Right Pane: Live PDF Preview -->
         <section class="w-full lg:w-1/2 bg-slate-950 flex flex-col items-center justify-start p-2 sm:p-6 overflow-y-auto relative">
             
             <div class="w-full max-w-[210mm] flex items-center justify-between mb-3 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-xl text-xs text-slate-400 backdrop-blur shrink-0">
@@ -251,9 +251,9 @@
                 <span class="text-slate-500 font-mono hidden sm:inline">210 x 297 mm</span>
             </div>
 
-            <!-- PDF Page Wrapper for Capture (Full A4 layout) with auto-scaling transform on small viewports -->
+            <!-- PDF Page Wrapper with proportional responsive scale for live preview -->
             <div class="w-full flex justify-center pb-12 overflow-x-auto px-2 sm:px-0">
-                <div id="pdf-content" class="w-[210mm] min-w-[210mm] min-h-[297mm] bg-white text-slate-900 shadow-2xl rounded-sm p-[10mm] text-[10.5px] font-sans leading-snug relative flex flex-col justify-between shrink-0 origin-top scale-[0.45] xs:scale-[0.55] sm:scale-[0.75] md:scale-[0.85] lg:scale-[0.88] xl:scale-[0.95] transition-transform mx-auto">
+                <div id="pdf-content" class="w-[210mm] min-w-[210mm] min-h-[297mm] bg-white text-slate-900 shadow-2xl rounded-sm p-[10mm] text-[10.5px] font-sans leading-snug relative flex flex-col justify-between shrink-0 origin-top scale-[0.42] xs:scale-[0.52] sm:scale-[0.72] md:scale-[0.82] lg:scale-[0.85] xl:scale-[0.92] transition-transform mx-auto">
                     
                     <!-- Top Section -->
                     <div class="space-y-3">
@@ -405,11 +405,13 @@
         </section>
     </main>
 
+    <!-- Toast Notification -->
     <div x-show="showToast" x-transition class="fixed bottom-6 right-6 bg-slate-800 text-slate-100 border border-slate-700 px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3">
         <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
         <span class="text-sm font-medium" x-text="toastMessage"></span>
     </div>
 
+    <!-- JavaScript Application Logic -->
     <script>
         function documentGenerator() {
             return {
@@ -536,14 +538,16 @@
                     this.isGenerating = true;
                     const element = document.getElementById('pdf-content');
                     
-                    // Temporarily remove transform scale for pristine mobile PDF capture
+                    // Temporarily reset preview transform for clean mobile PDF export
                     const originalTransform = element.style.transform;
                     const originalWidth = element.style.width;
+                    const originalMargin = element.style.margin;
                     element.style.transform = 'none';
                     element.style.width = '210mm';
+                    element.style.margin = '0 auto';
 
                     const opt = {
-                        margin:       [4, 4, 4, 4],
+                        margin:       [2, 2, 2, 2], // Balanced tight margins for mobile & desktop PDF rendering
                         filename:     (this.form.name ? this.form.name.toLowerCase().replace(/\s+/g, '_') : 'rental') + '_agreement.pdf',
                         image:        { type: 'jpeg', quality: 0.98 },
                         html2canvas:  { 
@@ -551,23 +555,23 @@
                             useCORS: true, 
                             letterRendering: true,
                             scrollY: 0,
-                            windowWidth: 794 // Exact standard A4 width in pixels at 96 DPI
+                            windowWidth: 794 // Standard A4 width in pixels at 96 DPI
                         },
                         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
 
                     html2pdf().from(element).set(opt).save().then(() => {
-                        // Restore original preview transform after PDF generation
+                        // Restore preview styles
                         element.style.transform = originalTransform;
                         element.style.width = originalWidth;
+                        element.style.margin = originalMargin;
                         
                         this.isGenerating = false;
                         this.triggerToast('PDF generated! Opening WhatsApp...');
                         
-                        // Clean mobile number for WhatsApp link
                         let cleanMobile = this.form.mobileNo ? this.form.mobileNo.replace(/\D/g, '') : '';
                         if (cleanMobile && !cleanMobile.startsWith('91') && cleanMobile.length === 10) {
-                            cleanMobile = '91' + cleanMobile; // Default to India country code if 10 digits
+                            cleanMobile = '91' + cleanMobile;
                         }
                         
                         const text = encodeURIComponent(`Hello *${this.form.name || 'Customer'}*,\n\nHere is your bike rental agreement and risk form copy from *Golden Wings Travel* (S.No: ${this.form.serialNo || 'N/A'}, Vehicle: ${this.form.vehicleNo || 'N/A'}). Please find your downloaded PDF attached.\n\nThank you for riding with us!`);
@@ -577,6 +581,7 @@
                     }).catch(err => {
                         element.style.transform = originalTransform;
                         element.style.width = originalWidth;
+                        element.style.margin = originalMargin;
                         console.error(err);
                         this.isGenerating = false;
                         this.triggerToast('Error generating PDF for WhatsApp. Please try again.');
